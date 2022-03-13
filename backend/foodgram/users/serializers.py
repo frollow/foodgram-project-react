@@ -1,5 +1,6 @@
-from api.models import Recipe
 from rest_framework import serializers
+
+from api.models import Recipe
 
 from .models import Subscription, User
 
