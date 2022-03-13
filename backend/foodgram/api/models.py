@@ -1,6 +1,7 @@
 from colorfield.fields import ColorField
 from django.db import models
 from django.urls import reverse
+from users.models import User
 
 
 class Tag(models.Model):
@@ -79,10 +80,22 @@ class Ingredient_in_recipe(models.Model):
 
 
 class Recipe(models.Model):
+    tags = models.ManyToManyField(
+        Tag,
+        related_name="recipe",
+        verbose_name="Теги",
+        help_text="Теги",
+    )
     name = models.CharField(
         max_length=256,
         verbose_name="Название рецепта",
         help_text="Название рецепта",
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="recipe",
+        verbose_name="Автор",
     )
     ingredients = models.ManyToManyField(
         Ingredient_in_recipe,
@@ -90,15 +103,9 @@ class Recipe(models.Model):
         verbose_name="Ингридиенты",
         help_text="Ингридиенты",
     )
-    tags = models.ManyToManyField(
-        Tag,
-        related_name="recipe",
-        verbose_name="Теги",
-        help_text="Теги",
-    )
     text = models.TextField(
-        verbose_name='Описание',
-        help_text='Описание',
+        verbose_name="Описание",
+        help_text="Описание",
     )
     cooking_time = models.SmallIntegerField(
         default=0,
