@@ -25,7 +25,7 @@ SECRET_KEY = "hr4=*i@t2-yby=4b37oc6-4%p#@i90a2*9g^3_d-)*bb#3*lw5"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_filters",
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
@@ -124,16 +125,22 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+MEDIA_URL = "/media/"
 
 
 # configure DRF
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
+    "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
-    ),
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
+    ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 5,
@@ -143,11 +150,9 @@ AUTH_USER_MODEL = "users.User"
 
 # configure Djoser
 DJOSER = {
-    "USER_ID_FIELD": "email",
-    "SERIALIZERS": {
-        "user_create": "users.serializers.UserCreateSerializer",
-        "user": "users.serializers.UserSerializer",
-        "current_user": "djoser.serializers.UserSerializer",
-        "user_delete": "djoser.serializers.UserSerializer",
+    "PERMISSIONS": {
+        "user": ["rest_framework.permissions.IsAuthenticated"],
+        "user_list": ["rest_framework.permissions.AllowAny"],
     },
+    "SERIALIZERS": {"user": "users.serializers.UserSerializer"},
 }

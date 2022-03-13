@@ -1,20 +1,39 @@
-from colorfield.fields import ColorField
+from django.core.validators import MinValueValidator
 from django.db import models
-from django.urls import reverse
+from django.db.models import Exists, OuterRef, Value
 from users.models import User
+
+
+class RecipeQueryset(models.QuerySet):
+    def annotate_user_flags(self, user):
+        if user.is_anonymous:
+            return self.annotate(
+                is_favorited=Value(False, output_field=models.BooleanField()),
+                is_in_shopping_cart=Value(
+                    False, output_field=models.BooleanField()
+                ),
+            )
+        return self.annotate(
+            is_favorited=Exists(
+                Favorite.objects.filter(user=user, recipe__pk=OuterRef("pk"))
+            ),
+            is_in_shopping_cart=Exists(
+                ShoppingCart.objects.filter(
+                    user=user, recipe__pk=OuterRef("pk")
+                )
+            ),
+        )
 
 
 class Tag(models.Model):
     name = models.CharField(
-        max_length=256,
-        verbose_name="Название тега",
-        help_text="Название тега",
+        max_length=200, blank=False, null=True, unique=True, verbose_name="Тег"
     )
-    color = ColorField(default="#FF0000")
+    color = models.CharField(
+        max_length=200, blank=False, null=True, unique=True
+    )
     slug = models.SlugField(
-        unique=True,
-        verbose_name="Slug для тега",
-        help_text="Slug для тега",
+        max_length=200, blank=False, null=True, unique=True
     )
 
     class Meta:
@@ -24,104 +43,85 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
-    def get_absolute_url(self):
-        return reverse("Tag_detail", kwargs={"pk": self.pk})
-
 
 class Ingredient(models.Model):
     name = models.CharField(
-        max_length=256,
-        verbose_name="Ингридиент",
-        help_text="Ингридиенты",
+        max_length=199,
+        blank=False,
+        null=True,
+        unique=True,
+        verbose_name="Название",
     )
     measurement_unit = models.CharField(
-        max_length=20,
-        verbose_name="Единица измерения",
-        help_text="Единица измерения",
+        max_length=50,
+        verbose_name="Ед. измерения",
     )
 
     class Meta:
-        verbose_name = "Ингридиент"
-        verbose_name_plural = "Ингридиенты"
+        ordering = ("name",)
+        verbose_name = "Ингредиент"
+        verbose_name_plural = "Ингредиенты"
 
     def __str__(self):
         return self.name
-
-    def get_absolute_url(self):
-        return reverse("Ingredient_detail", kwargs={"pk": self.pk})
-
-
-class Ingredient_in_recipe(models.Model):
-    ingredient = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-        related_name="ingredient_in_recipe",
-        null=True,
-        verbose_name="Ингредиент в рецепте",
-        help_text="Ингредиент в рецепте",
-    )
-    amount = models.SmallIntegerField(
-        default=0,
-        blank=False,
-        null=False,
-        verbose_name="Количество",
-        help_text="Количество",
-    )
-
-    class Meta:
-        verbose_name = "Ингредиент в рецепте"
-        verbose_name_plural = "Ингредиенты в рецепте"
-
-    def get_absolute_url(self):
-        return reverse("Ingredient_detail", kwargs={"pk": self.pk})
 
 
 class Recipe(models.Model):
-    tags = models.ManyToManyField(
-        Tag,
-        related_name="recipe",
-        verbose_name="Теги",
-        help_text="Теги",
-    )
-    name = models.CharField(
-        max_length=256,
-        verbose_name="Название рецепта",
-        help_text="Название рецепта",
-    )
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="recipe",
-        verbose_name="Автор",
+        User, on_delete=models.CASCADE, related_name="recipes"
     )
+    name = models.CharField(max_length=200, blank=False)
+    image = models.ImageField(upload_to="api/images/")
+    text = models.TextField()
     ingredients = models.ManyToManyField(
-        Ingredient_in_recipe,
-        related_name="recipe",
-        verbose_name="Ингридиенты",
-        help_text="Ингридиенты",
+        Ingredient, through="IngredientInRecipe"
     )
-    text = models.TextField(
-        verbose_name="Описание",
-        help_text="Описание",
+    tags = models.ManyToManyField(Tag, through="TagsRecipe")
+    cooking_time = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1, "Время приготовления должно быть больше 0")
+        ]
     )
-    cooking_time = models.SmallIntegerField(
-        default=0,
-        blank=False,
-        null=False,
-        verbose_name="Общее время приготовления",
-        help_text="Общее время приготовления",
-    )
-    image = models.ImageField("Картинка", upload_to="images/", blank=True)
+    objects = RecipeQueryset.as_manager()
 
     class Meta:
-        verbose_name = "Pецепт"
-        verbose_name_plural = "Pецепт"
+        ordering = ("-pk",)
+        verbose_name = "Рецепт"
+        verbose_name_plural = "Рецепты"
 
     def __str__(self):
         return self.name
 
-    def get_absolute_url(self):
-        return reverse("Recipe_detail", kwargs={"pk": self.pk})
+
+class TagsRecipe(models.Model):
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+
+class IngredientInRecipe(models.Model):
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        verbose_name="Ингредиент в рецепте",
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name="Рецепт",
+        related_name="recipe_ingredients",
+    )
+    amount = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1, "Количество ингредиента должно быть больше 0")
+        ]
+    )
+
+    class Meta:
+        verbose_name = "Количество ингредиента"
+        verbose_name_plural = "Количество ингредиентов"
+
+    def __str__(self):
+        return f"{self.ingredient} in {self.recipe}"
 
 
 class Favorite(models.Model):

@@ -1,26 +1,12 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
-from .models import User
+from .models import Subscription, User
 
 
-class UserAdmin(admin.ModelAdmin):
-    """
-    Параметры отображения модели User (пользователи)
-    в интерфейсе администратора.
-    """
-
-    list_display = (
-        "username",
-        "email",
-        "first_name",
-        "last_name",
-        "is_subscribed",
-        "role",
-    )
-    search_fields = ("username", "role")
-    list_filter = ("role",)
-    empty_value_display = "-пусто-"
-    list_editable = ("role",)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("user", "author")
 
 
 admin.site.register(User, UserAdmin)
+admin.site.register(Subscription, SubscriptionAdmin)
