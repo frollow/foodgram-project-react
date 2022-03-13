@@ -122,3 +122,58 @@ class Recipe(models.Model):
 
     def get_absolute_url(self):
         return reverse("Recipe_detail", kwargs={"pk": self.pk})
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="user_favorite",
+        verbose_name="Пользователь",
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="recipe_favorite",
+        verbose_name="Избранный рецепт",
+    )
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Избранное"
+        verbose_name_plural = "Избранное"
+        default_related_name = "favorit"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"], name="unique_favorite"
+            )
+        ]
+
+
+class ShoppingCart(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="user_shopping_cart",
+        verbose_name="Пользователь",
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="recipe_shopping_cart",
+        verbose_name="рецепт в корзине",
+    )
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Покупка"
+        verbose_name_plural = "Покупки"
+        default_related_name = "shoplist"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"], name="unique_shopping"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.recipe} в корзине у {self.user}"
