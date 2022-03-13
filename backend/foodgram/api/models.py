@@ -41,8 +41,8 @@ class Ingredient(models.Model):
     )
 
     class Meta:
-        verbose_name = "Ingredient"
-        verbose_name_plural = "Ingredients"
+        verbose_name = "Ингридиент"
+        verbose_name_plural = "Ингридиенты"
 
     def __str__(self):
         return self.name
@@ -57,8 +57,8 @@ class Ingredient_in_recipe(models.Model):
         on_delete=models.CASCADE,
         related_name="ingredient_in_recipe",
         null=True,
-        verbose_name="Ингридиент в рецепте",
-        help_text="Ингридиент в рецепте",
+        verbose_name="Ингредиент в рецепте",
+        help_text="Ингредиент в рецепте",
     )
     amount = models.SmallIntegerField(
         default=0,
@@ -69,11 +69,8 @@ class Ingredient_in_recipe(models.Model):
     )
 
     class Meta:
-        verbose_name = "Ingredient"
-        verbose_name_plural = "Ingredients"
-
-    def __str__(self):
-        return self.name
+        verbose_name = "Ингредиент в рецепте"
+        verbose_name_plural = "Ингредиенты в рецепте"
 
     def get_absolute_url(self):
         return reverse("Ingredient_detail", kwargs={"pk": self.pk})
