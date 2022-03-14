@@ -28,13 +28,13 @@ class RecipeQueryset(models.QuerySet):
 
 class Tag(models.Model):
     name = models.CharField(
-        max_length=200, blank=False, null=True, unique=True, verbose_name="Тег"
+        max_length=200, null=True, unique=True, verbose_name="Тег"
     )
     color = models.CharField(
-        max_length=200, blank=False, null=True, unique=True
+        max_length=200, null=True, unique=True
     )
     slug = models.SlugField(
-        max_length=200, blank=False, null=True, unique=True
+        max_length=200, null=True, unique=True
     )
 
     class Meta:
@@ -48,7 +48,6 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         max_length=199,
-        blank=False,
         null=True,
         unique=True,
         verbose_name="Название",
@@ -71,7 +70,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="recipes"
     )
-    name = models.CharField(max_length=200, blank=False)
+    name = models.CharField(max_length=200)
     image = models.ImageField(upload_to="api/images/")
     text = models.TextField()
     ingredients = models.ManyToManyField(
@@ -97,6 +96,10 @@ class Recipe(models.Model):
 class TagsRecipe(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    
+    class Meta:
+        verbose_name = "Тег чека"
+        verbose_name_plural = "Теги чека"
 
 
 class IngredientInRecipe(models.Model):
@@ -120,6 +123,11 @@ class IngredientInRecipe(models.Model):
     class Meta:
         verbose_name = "Количество ингредиента"
         verbose_name_plural = "Количество ингредиентов"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ingredient", "recipe"], name="unique_ingredient"
+            )
+        ]
 
     def __str__(self):
         return f"{self.ingredient} in {self.recipe}"
