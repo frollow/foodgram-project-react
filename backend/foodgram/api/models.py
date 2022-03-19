@@ -30,12 +30,8 @@ class Tag(models.Model):
     name = models.CharField(
         max_length=200, null=True, unique=True, verbose_name="Тег"
     )
-    color = models.CharField(
-        max_length=200, null=True, unique=True
-    )
-    slug = models.SlugField(
-        max_length=200, null=True, unique=True
-    )
+    color = models.CharField(max_length=200, null=True, unique=True)
+    slug = models.SlugField(max_length=200, null=True, unique=True)
 
     class Meta:
         verbose_name = "Тег"
@@ -76,7 +72,13 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient, through="IngredientInRecipe"
     )
-    tags = models.ManyToManyField(Tag, through="TagsRecipe")
+    tags = models.ManyToManyField(
+        Tag,
+        related_name="recipe",
+        null=True,
+        verbose_name="Тег чека",
+        help_text="Тег чека",
+    )
     cooking_time = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(1, "Время приготовления должно быть больше 0")
@@ -91,15 +93,6 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class TagsRecipe(models.Model):
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    
-    class Meta:
-        verbose_name = "Тег чека"
-        verbose_name_plural = "Теги чека"
 
 
 class IngredientInRecipe(models.Model):
