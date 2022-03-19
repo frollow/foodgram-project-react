@@ -7,11 +7,8 @@ from rest_framework.response import Response
 
 from .models import Subscription, User
 from .paginator import VariablePageSizePaginator
-from .serializers import (
-    ListSubscriptionSerializer,
-    SubscriptionSerializer,
-    UserSerializer,
-)
+from .serializers import (ListSubscriptionSerializer, SubscriptionSerializer,
+                          UserSerializer)
 
 
 class CustomUserViewSet(UserViewSet):
