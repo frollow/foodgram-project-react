@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
 from api.models import Recipe
 
@@ -6,7 +7,7 @@ from .models import Subscription, User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -19,38 +20,14 @@ class UserSerializer(serializers.ModelSerializer):
             "is_subscribed",
         )
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get("request")
-        if request is None or request.user.is_anonymous:
+    def get_is_subscribed(self, following):
+        if self.context.get(
+            "request",
+        ).user.is_anonymous:
             return False
         return Subscription.objects.filter(
-            user=request.user, author=obj.id
+            user=self.context.get("request").user, author=following
         ).exists()
-
-
-class SubscriptionSerializer(serializers.ModelSerializer):
-    queryset = User.objects.all()
-    user = serializers.PrimaryKeyRelatedField(queryset=queryset)
-    author = serializers.PrimaryKeyRelatedField(queryset=queryset)
-
-    class Meta:
-        model = Subscription
-        fields = ("user", "author")
-
-    def validate(self, data):
-        request = self.context.get("request")
-        author_id = data["author"].id
-        if request.method == "GET":
-            if request.user.id == author_id:
-                raise serializers.ValidationError("Нельзя подписаться на себя")
-            follow_exists = Subscription.objects.filter(
-                user=request.user, author__id=author_id
-            ).exists()
-            if follow_exists:
-                raise serializers.ValidationError(
-                    "Вы уже подписаны на этого пользователя"
-                )
-        return data
 
 
 class SubscriptionRecipeSerializer(serializers.ModelSerializer):
@@ -60,14 +37,9 @@ class SubscriptionRecipeSerializer(serializers.ModelSerializer):
 
 
 class ListSubscriptionSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source="author.id")
-    email = serializers.ReadOnlyField(source="author.email")
-    username = serializers.ReadOnlyField(source="author.username")
-    first_name = serializers.ReadOnlyField(source="author.first_name")
-    last_name = serializers.ReadOnlyField(source="author.last_name")
-    is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -82,22 +54,53 @@ class ListSubscriptionSerializer(serializers.ModelSerializer):
             "recipes_count",
         )
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get("request")
-        if not request or request.user.is_anonymous:
-            return False
+    def get_recipes_count(self, following):
+        return Recipe.objects.filter(author=following).count()
+
+    def get_recipes(self, following):
+        queryset = self.context.get("request")
+        recipes_limit = queryset.query_params.get("recipes_limit")
+        if not recipes_limit:
+            return RecipeFollowingSerializer(
+                following.follower.all(),
+                many=True,
+                context={"request": queryset},
+            ).data
+        return RecipeFollowingSerializer(
+            following.follower.all()[: int(recipes_limit)],
+            many=True,
+            context={"request": queryset},
+        ).data
+
+    def get_is_subscribed(self, following):
         return Subscription.objects.filter(
-            user=obj.user, author=obj.author
+            user=self.context.get("request").user, author=following
         ).exists()
 
-    def get_recipes(self, obj):
-        request = self.context.get("request")
-        limit = request.GET.get("recipes_limit")
-        queryset = Recipe.objects.filter(author=obj.author)
-        if limit is not None:
-            queryset = Recipe.objects.filter(author=obj.author)[: int(limit)]
 
-        return SubscriptionRecipeSerializer(queryset, many=True).data
+class RecipeFollowingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ("id", "name", "image", "cooking_time")
 
-    def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = ("user", "author")
+
+    def validate(self, data):
+        get_object_or_404(User, username=data["author"])
+        if self.context["request"].user == data["author"]:
+            raise serializers.ValidationError("Сам на себя подписываешься!")
+        if Subscription.objects.filter(
+            user=self.context["request"].user, author=data["author"]
+        ):
+            raise serializers.ValidationError("Уже подписан")
+        return data
+
+    def to_representation(self, instance):
+        return ListSubscriptionSerializer(
+            instance.author,
+            context={"request": self.context.get("request")},
+        ).data

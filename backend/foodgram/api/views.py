@@ -30,10 +30,8 @@ from .permissions import OwnerOrAdminOrSafeMethods
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Tag.objects.all()
+    queryset = Tag.objects.all().order_by("id")
     serializer_class = TagSerializer
-    permission_classes = [AllowAny]
-    pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):

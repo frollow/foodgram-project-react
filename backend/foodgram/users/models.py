@@ -11,6 +11,9 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "username"]
 
+    class Meta:
+        ordering = ["username"]
+
     def __str__(self):
         return self.username
 
@@ -19,7 +22,6 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        blank=False,
         related_name="follower",
         verbose_name="подписчик",
     )

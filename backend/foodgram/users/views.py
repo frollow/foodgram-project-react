@@ -2,51 +2,63 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Subscription, User
-from .permissions import IsOwnerOrReadOnly
-from .serializers import (ListSubscriptionSerializer, SubscriptionSerializer,
-                          UserSerializer)
+from .paginator import VariablePageSizePaginator
+from .serializers import (
+    ListSubscriptionSerializer,
+    SubscriptionSerializer,
+    UserSerializer,
+)
 
 
 class CustomUserViewSet(UserViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
-    pagination_class = PageNumberPagination
+    pagination_class = VariablePageSizePaginator
 
-    @action(detail=True, permission_classes=[IsAuthenticated])
-    def subscribe(self, request, id=None):
-        user = request.user
-        author = get_object_or_404(User, id=id)
-        data = {
-            "user": user.id,
-            "author": author.id,
-        }
+    @action(
+        detail=False, methods=["GET"], permission_classes=(IsAuthenticated,)
+    )
+    def users(self, request):
+        serializer = UserSerializer(
+            super().get_queryset(), many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)
+
+    @action(
+        detail=False, methods=["GET"], permission_classes=(IsAuthenticated,)
+    )
+    def subscriptions(self, request, pk=None):
+        subscriptions_list = self.paginate_queryset(
+            User.objects.filter(following__user=request.user)
+        )
+        serializer = ListSubscriptionSerializer(
+            subscriptions_list, many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["POST", "DELETE"],
+        permission_classes=(IsAuthenticated,),
+    )
+    def subscribe(self, request, id):
+        if request.method != "POST":
+            subscription = get_object_or_404(
+                Subscription,
+                author=get_object_or_404(User, id=id),
+                user=request.user,
+            )
+            self.perform_destroy(subscription)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         serializer = SubscriptionSerializer(
-            data=data, context={"request": request}
+            data={
+                "user": request.user.id,
+                "author": get_object_or_404(User, id=id).id,
+            },
+            context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @subscribe.mapping.delete
-    def delete_subscribe(self, request, id=None):
-        user = request.user
-        author = get_object_or_404(User, id=id)
-        subscribe = get_object_or_404(Subscription, user=user, author=author)
-        subscribe.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(detail=False, permission_classes=[IsAuthenticated])
-    def subscriptions(self, request):
-        user = request.user
-        queryset = Subscription.objects.filter(user=user)
-        pages = self.paginate_queryset(queryset)
-        serializer = ListSubscriptionSerializer(
-            pages, many=True, context={"request": request}
-        )
-        return self.get_paginated_response(serializer.data)

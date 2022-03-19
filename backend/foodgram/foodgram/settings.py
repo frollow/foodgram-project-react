@@ -104,14 +104,12 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 5,
 }
 
 DJOSER = {
     "PERMISSIONS": {
-        "user": ["rest_framework.permissions.IsAuthenticated"],
-        "user_list": ["rest_framework.permissions.AllowAny"],
+        "user_list": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
+        "user": ["rest_framework.permissions.AllowAny"],
     },
     "SERIALIZERS": {"user": "users.serializers.UserSerializer"},
 }
