@@ -57,13 +57,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "foodgram.wsgi.application"
 
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-#     }
-# }
-
 DATABASES = {
     "default": {
         "ENGINE": os.getenv(
@@ -101,11 +94,13 @@ USE_L10N = True
 USE_TZ = False
 
 
+DOCS_DIR = os.path.join(BASE_DIR, "api/docs/")
+
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
-MEDIA_URL = "/media/"
+MEDIA_URL = "/mediafiles/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles/")
 
 
 AUTH_USER_MODEL = "users.User"
