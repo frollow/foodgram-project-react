@@ -58,7 +58,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             sudo docker-compose stop
-            sudo docker-compose rm api
             sudo rm .env
             sudo touch .env
             echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
