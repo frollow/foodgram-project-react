@@ -8,9 +8,7 @@ services:
       - ./.env
 
   api:
-    build: 
-      context: ../backend/foodgram/
-      dockerfile: Dockerfile
+    image: fartem2003/foodgrambackend
     restart: always
     volumes:
       - static_value:/app/static/
@@ -21,9 +19,7 @@ services:
     env_file:
       - ./.env
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: fartem2003/foodgramfrontend
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
