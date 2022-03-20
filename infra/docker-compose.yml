@@ -8,7 +8,7 @@ services:
       - ./.env
 
   api:
-    image: fartem2003/foodgrambackend:latest
+    image: fartem2003/food-backend:latest
     restart: always
     volumes:
       - static_value:/app/static/
