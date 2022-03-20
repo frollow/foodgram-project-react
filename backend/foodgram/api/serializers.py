@@ -3,9 +3,9 @@ from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from users.serializers import UserSerializer
 from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                      ShoppingCart, Tag)
+from users.serializers import UserSerializer
 
 User = get_user_model()
 
@@ -143,7 +143,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             arr.append(ingredient_item["id"])
             if int(ingredient_item["amount"]) <= 0:
                 raise serializers.ValidationError(
-                    "Проверьте значение рядом с ингредиентом оно не должно равняться 0."
+                    "Проверьте значение, оно не должно быть равно 0."
                 )
         setarr = set(arr)
         if len(arr) != len(setarr):
