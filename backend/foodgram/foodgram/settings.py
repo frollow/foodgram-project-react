@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# SECRET_KEY = "hr4=*i@t2-yby=4b37oc6-4%p#@i90a2*9g^3_d-)*bb#3*lw5"
+
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", default="any_key")
 

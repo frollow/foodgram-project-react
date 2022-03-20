@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.7'
 services:
   db:
     image: postgres:13-alpine
@@ -8,7 +8,7 @@ services:
       - ./.env
 
   api:
-    image: fartem2003/foodgrambackend
+    image: fartem2003/foodgrambackend:latest
     restart: always
     volumes:
       - static_value:/app/static/
@@ -19,7 +19,7 @@ services:
     env_file:
       - ./.env
   frontend:
-    image: fartem2003/foodgramfrontend
+    image: fartem2003/foodgramfrontend:latest
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
