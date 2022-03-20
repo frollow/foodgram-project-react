@@ -4,7 +4,7 @@ EXPOSE 8000
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY /requirements.txt .
 
 RUN /usr/local/bin/python -m pip install --upgrade pip
 RUN pip install -r requirements.txt --no-cache-dir
