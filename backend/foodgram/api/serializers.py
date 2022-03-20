@@ -182,10 +182,9 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        data = ShowRecipeSerializer(
+        return ShowRecipeSerializer(
             instance, context={"request": self.context.get("request")}
         ).data
-        return data
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
