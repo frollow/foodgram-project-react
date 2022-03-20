@@ -21,7 +21,6 @@ flake8==4.0.1
 idna==3.3
 itypes==1.2.0
 Jinja2==3.0.3
-Markdown==3.3.6
 MarkupSafe==2.1.0
 mccabe==0.6.1
 mypy-extensions==0.4.3
@@ -47,3 +46,4 @@ tomli==2.0.1
 uritemplate==4.1.1
 urllib3==1.26.8
 gunicorn==20.1.0
+python-dotenv==0.19.2
