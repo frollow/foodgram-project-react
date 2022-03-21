@@ -67,7 +67,7 @@ class Recipe(models.Model):
         User, on_delete=models.CASCADE, related_name="recipes"
     )
     name = models.CharField(max_length=200)
-    image = models.ImageField(upload_to="api/images/")
+    image = models.ImageField(upload_to="api/")
     text = models.TextField()
     ingredients = models.ManyToManyField(
         Ingredient, through="IngredientInRecipe"
