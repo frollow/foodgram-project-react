@@ -61,12 +61,12 @@ class ListSubscriptionSerializer(serializers.ModelSerializer):
         recipes_limit = queryset.query_params.get("recipes_limit")
         if not recipes_limit:
             return RecipeFollowingSerializer(
-                following.follower.all(),
+                following.recipes.all(),
                 many=True,
                 context={"request": queryset},
             ).data
         return RecipeFollowingSerializer(
-            following.follower.all()[: int(recipes_limit)],
+            following.recipes.all()[: int(recipes_limit)],
             many=True,
             context={"request": queryset},
         ).data
