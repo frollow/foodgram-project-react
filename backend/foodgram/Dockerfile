@@ -2,11 +2,12 @@ FROM python:3.8-slim
 
 EXPOSE 8000
 
-COPY backend/foodgram/requirements.txt .
-RUN python pip install -r ./requirements.txt
-
 WORKDIR /app
-COPY . /app
+
+COPY backend/foodgram/requirements.txt .
+RUN pip install -r requirements.txt --no-cache-dir
+
+COPY . .
 
 RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
 USER appuser
