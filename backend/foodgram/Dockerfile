@@ -2,13 +2,11 @@ FROM python:3.8-slim
 
 EXPOSE 8000
 
-WORKDIR /app
-
 COPY requirements.txt .
+RUN python pip install -r requirements.txt
 
-RUN pip install -r requirements.txt --no-cache-dir
-
-COPY . .
+WORKDIR /app
+COPY . /app
 
 RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
 USER appuser
