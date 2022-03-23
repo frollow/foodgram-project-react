@@ -3,7 +3,7 @@ FROM python:3.8-slim
 EXPOSE 8000
 
 COPY backend/foodgram/requirements.txt .
-RUN python pip install -r backend/foodgram/requirements.txt
+RUN python pip install -r ./requirements.txt
 
 WORKDIR /app
 COPY . /app
